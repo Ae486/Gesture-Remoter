@@ -33,4 +33,4 @@
 
 ## 许可证
 
-本项目使用 MIT License，详见仓库根目录 `LICENSE`。
+本项目使用 MIT License
