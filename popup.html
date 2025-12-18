@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>手势遥控</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <img class="logo" src="icons/icon32.png" alt="" />
+        <div class="brand-text">
+          <div class="title">手势遥控</div>
+          <div class="subtitle">摄像头手势 → 滚动 / 缩放 / 视频</div>
+        </div>
+      </div>
+    </header>
+
+    <section class="controls">
+      <div class="row">
+        <button id="start" class="primary">启动</button>
+        <button id="stop">停止</button>
+      </div>
+      <div class="row row-secondary">
+        <button id="grantCamera">授权摄像头</button>
+      </div>
+      <div class="note">
+        提示：本地 <code>file://</code> / PDF 需要在扩展详情中开启“允许访问文件网址”；PDF 滚动/真全屏会使用调试协议，
+        Chrome 会显示“正在调试此标签页”提示（首次滚动可能会出现相关提示）。
+      </div>
+
+      <div id="camBox" class="cam-box" hidden>
+        <div class="cam-title">摄像头预览（仅用于授权）</div>
+        <video id="camPreview" autoplay playsinline muted></video>
+        <div class="cam-actions">
+          <button id="camStop">关闭预览</button>
+        </div>
+      </div>
+
+      <div class="toggles">
+        <label class="toggle">
+          <input id="enableScroll" type="checkbox" />
+          <span>滚动</span>
+        </label>
+        <label class="toggle">
+          <input id="enableZoom" type="checkbox" />
+          <span>缩放</span>
+        </label>
+        <label class="toggle">
+          <input id="enableVideo" type="checkbox" />
+          <span>视频</span>
+        </label>
+      </div>
+
+      <div class="settings">
+        <div class="settings-title">左右手选择</div>
+        <label class="field">
+          <span>滚动手</span>
+          <select id="scrollHand">
+            <option value="any">任意</option>
+            <option value="left">左手</option>
+            <option value="right">右手</option>
+          </select>
+          <span></span>
+        </label>
+        <label class="field">
+          <span>缩放手</span>
+          <select id="zoomHand">
+            <option value="any">任意</option>
+            <option value="left">左手</option>
+            <option value="right">右手</option>
+          </select>
+          <span></span>
+        </label>
+        <label class="field">
+          <span>视频：播放/暂停</span>
+          <select id="videoHand">
+            <option value="any">任意</option>
+            <option value="left">左手</option>
+            <option value="right">右手</option>
+          </select>
+          <span></span>
+        </label>
+        <label class="field">
+          <span>视频：样式轮换</span>
+          <select id="videoModeHand">
+            <option value="left">左手</option>
+            <option value="right">右手</option>
+          </select>
+          <span></span>
+        </label>
+        <div class="help">
+          左右手选择按“你真实的左/右手”理解；扩展已默认纠正了镜像导致的左右反转。
+        </div>
+
+        <div class="settings-title">滚动 / 缩放设置</div>
+        <label class="field">
+          <span>滚动目标</span>
+          <select id="scrollTargetMode">
+            <option value="auto">自动（主内容）</option>
+            <option value="document">仅页面（document）</option>
+          </select>
+          <span></span>
+        </label>
+
+        <label class="field">
+          <span>滚动灵敏度</span>
+          <input id="scrollSensitivity" type="range" min="600" max="2600" step="50" />
+          <span id="scrollSensitivityVal" class="mono"></span>
+        </label>
+        <label class="field">
+          <span>滚动死区</span>
+          <input id="scrollDeadzone" type="range" min="0" max="20" step="1" />
+          <span id="scrollDeadzoneVal" class="mono"></span>
+        </label>
+        <label class="field">
+          <span>滚动每帧上限</span>
+          <input id="scrollClamp" type="range" min="20" max="180" step="5" />
+          <span id="scrollClampVal" class="mono"></span>
+        </label>
+        <label class="toggle">
+          <input id="scrollInvert" type="checkbox" />
+          <span>触控方向（手上移 ⇒ 页面下滑）</span>
+        </label>
+
+        <label class="field">
+          <span>缩放灵敏度</span>
+          <input id="zoomSensitivity" type="range" min="2" max="20" step="0.5" />
+          <span id="zoomSensitivityVal" class="mono"></span>
+        </label>
+        <label class="field">
+          <span>缩放死区</span>
+          <input id="zoomDeadzone" type="range" min="0" max="0.05" step="0.001" />
+          <span id="zoomDeadzoneVal" class="mono"></span>
+        </label>
+        <label class="toggle">
+          <input id="zoomInvert" type="checkbox" />
+          <span>缩放方向（手上移 ⇒ 放大）</span>
+        </label>
+
+        <label class="field">
+          <span>门控时间</span>
+          <input id="activationHold" type="range" min="0" max="500" step="20" />
+          <span id="activationHoldVal" class="mono"></span>
+        </label>
+        <div class="help">
+          门控时间：需要持续识别到“手 + 捏合离合”达到该时长才会触发滚动/缩放，用于防止瞬间误触（例如扶眼镜）。
+        </div>
+
+        <div class="settings-title">预览窗口设置</div>
+        <label class="toggle">
+          <input id="previewEnabled" type="checkbox" />
+          <span>启用右上角预览窗口</span>
+        </label>
+        <label class="field">
+          <span>预览帧率</span>
+          <input id="previewFps" type="range" min="1" max="15" step="1" />
+          <span id="previewFpsVal" class="mono"></span>
+        </label>
+        <label class="toggle">
+          <input id="previewMirror" type="checkbox" />
+          <span>预览镜像（仅影响显示，不影响识别）</span>
+        </label>
+
+        <div class="settings-title">性能</div>
+        <label class="toggle">
+          <input id="useGpuDelegate" type="checkbox" />
+          <span>启用 GPU 加速（部分设备可能出现 OpenGL/WebGL 报错）</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="status">
+      <div class="status-row">
+        <span class="label">运行中</span>
+        <span id="running" class="value">—</span>
+      </div>
+      <div class="status-row">
+        <span class="label">摄像头</span>
+        <span id="camera" class="value">—</span>
+      </div>
+      <div class="status-row">
+        <span class="label">手</span>
+        <span id="hand" class="value">—</span>
+      </div>
+      <div class="status-row">
+        <span class="label">错误</span>
+        <span id="error" class="value error">—</span>
+      </div>
+      <div class="status-row">
+        <span class="label">调试</span>
+        <span id="debug" class="value">—</span>
+      </div>
+    </section>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
