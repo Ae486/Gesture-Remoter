@@ -33,4 +33,8 @@
 
 ## 许可证
 
+<<<<<<< HEAD
 本项目使用 MIT License，详见 `gesture-extension/LICENSE`（仓库根目录也有一份 `LICENSE`）。
+=======
+本项目使用 MIT License
+>>>>>>> 08529f710927d7719b6336c232e5785dc6e75880
