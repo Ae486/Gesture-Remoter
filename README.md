@@ -19,6 +19,7 @@
 
 ## 重要提示
 
+<<<<<<< HEAD
 - 受限页面：扩展无法在 `chrome://*` / `edge://*` / Chrome Web Store 等页面注入内容脚本
 - iframe：仅在顶层页面运行，避免误控子页面滚动
 - 本地 `file://` / PDF：
@@ -27,6 +28,12 @@
 - 若看到 `NotAllowedError` 且没有弹出授权窗口：
   - 检查系统摄像头隐私权限（Windows 设置 → 隐私和安全 → 摄像头）
   - 检查浏览器摄像头设置（`chrome://settings/content/camera` / `edge://settings/content/camera`）
+=======
+- **站点访问权限**：建议把扩展“站点访问权限”设为“所有网站”，否则部分页面无法注入脚本。
+- **受限页面**：扩展无法在 `chrome://*`、`edge://*`、Chrome Web Store 等页面运行。
+- **iframe**：为避免控制子页面滚动，本扩展只在顶层页面生效（不在 iframe 内运行）。
+- **本地文件 / PDF**：本地 `file://` / PDF 需要在扩展详情中开启“允许访问文件网址”。PDF 滚动/全屏会使用调试协议，Chrome 可能显示“正在调试此标签页”提示。
+>>>>>>> f913ec0675c85943cc9a89224275a6b4f14a6dc0
 
 ## 模型与资源
 
@@ -35,6 +42,7 @@
 
 ## 权限与隐私
 
+<<<<<<< HEAD
 - 摄像头画面仅用于本地手势识别，不上传、不出网
 - `debugger` 权限仅用于 PDF 滚动与按键注入（例如全屏 `F`）
 
@@ -42,3 +50,11 @@
 
 MIT License（见 `gesture-remoter-extension/LICENSE`，仓库根目录也有 `LICENSE`）。
 
+=======
+- 摄像头画面仅用于本地手势识别，不上传、不出网、不持久化保存。
+- `debugger` 权限用于 PDF 滚动与模拟按键，Chrome 可能显示“正在调试此标签页”提示。
+
+## 许可证
+
+本项目使用 MIT License
+>>>>>>> f913ec0675c85943cc9a89224275a6b4f14a6dc0
