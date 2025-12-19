@@ -48,7 +48,6 @@
 
 MIT License（见 `gesture-remoter-extension/LICENSE`，仓库根目录也有 `LICENSE`）。
 
-=======
 - 摄像头画面仅用于本地手势识别，不上传、不出网、不持久化保存。
 - `debugger` 权限用于 PDF 滚动与模拟按键，Chrome 可能显示“正在调试此标签页”提示。
 
