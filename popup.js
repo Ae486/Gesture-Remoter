@@ -88,8 +88,9 @@ function applyState(state) {
   }
 
   if (els.scrollSensitivity) {
-    els.scrollSensitivity.value = Number(tuning.scrollGain ?? 1500);
-    els.scrollSensitivityVal.textContent = `×${(Number(els.scrollSensitivity.value) / 1500).toFixed(2)}`;
+    const mult = Number(tuning.scrollGain ?? 1500) / 1500;
+    els.scrollSensitivity.value = String(mult);
+    els.scrollSensitivityVal.textContent = `×${mult.toFixed(2)}`;
   }
   if (els.scrollDeadzone) {
     els.scrollDeadzone.value = Number(tuning.scrollDeadzonePx ?? 6);
@@ -110,12 +111,15 @@ function applyState(state) {
     els.previewEnabled.checked = tuning.previewEnabled !== false;
   }
   if (els.zoomSensitivity) {
-    els.zoomSensitivity.value = String(Number(tuning.zoomDragGain ?? 8));
-    els.zoomSensitivityVal.textContent = `×${(Number(els.zoomSensitivity.value) / 8).toFixed(2)}`;
+    const mult = Number(tuning.zoomDragGain ?? 8) / 8;
+    els.zoomSensitivity.value = String(mult);
+    els.zoomSensitivityVal.textContent = `×${mult.toFixed(2)}`;
   }
   if (els.zoomDeadzone) {
-    els.zoomDeadzone.value = String(Number(tuning.zoomDeadzoneLog ?? 0.008));
-    els.zoomDeadzoneVal.textContent = String(els.zoomDeadzone.value);
+    const dz = Number(tuning.zoomDeadzoneLog ?? 0.008);
+    const ui = Math.round(dz * 1000);
+    els.zoomDeadzone.value = String(ui);
+    els.zoomDeadzoneVal.textContent = String(ui);
   }
   if (els.zoomInvert) {
     els.zoomInvert.checked = tuning.zoomInvert !== false;
@@ -218,8 +222,10 @@ function sendSettings() {
   if (settingsDebounce) clearTimeout(settingsDebounce);
   settingsDebounce = setTimeout(() => {
     const previewEnabled = els.previewEnabled?.checked !== false;
+    const scrollMult = Number(els.scrollSensitivity?.value);
+    const zoomMult = Number(els.zoomSensitivity?.value);
     const tuning = {
-      scrollGain: Number(els.scrollSensitivity?.value),
+      scrollGain: Number.isFinite(scrollMult) ? scrollMult * 1500 : undefined,
       scrollDeadzonePx: Number(els.scrollDeadzone?.value),
       scrollClampPxPerTick: Number(els.scrollClamp?.value),
       scrollInvert: !!els.scrollInvert?.checked,
@@ -228,8 +234,8 @@ function sendSettings() {
       scrollRequireOpenPalm: false,
       previewEnabled,
       previewFps: Number(els.previewFps?.value),
-      zoomDragGain: Number(els.zoomSensitivity?.value),
-      zoomDeadzoneLog: Number(els.zoomDeadzone?.value),
+      zoomDragGain: Number.isFinite(zoomMult) ? zoomMult * 8 : undefined,
+      zoomDeadzoneLog: Number(els.zoomDeadzone?.value) / 1000,
       zoomInvert: !!els.zoomInvert?.checked,
       activationHoldMs: Number(els.activationHold?.value),
       useGpuDelegate: !!els.useGpuDelegate?.checked,
@@ -268,13 +274,11 @@ function sendSettings() {
 ].forEach((el) => {
   if (!el) return;
   el.addEventListener("change", () => {
-    if (el === els.scrollSensitivity)
-      els.scrollSensitivityVal.textContent = `×${(Number(el.value) / 1500).toFixed(2)}`;
+    if (el === els.scrollSensitivity) els.scrollSensitivityVal.textContent = `×${Number(el.value).toFixed(2)}`;
     if (el === els.scrollDeadzone) els.scrollDeadzoneVal.textContent = String(el.value);
     if (el === els.scrollClamp) els.scrollClampVal.textContent = String(el.value);
     if (el === els.previewFps) els.previewFpsVal.textContent = String(el.value);
-    if (el === els.zoomSensitivity)
-      els.zoomSensitivityVal.textContent = `×${(Number(el.value) / 8).toFixed(2)}`;
+    if (el === els.zoomSensitivity) els.zoomSensitivityVal.textContent = `×${Number(el.value).toFixed(2)}`;
     if (el === els.zoomDeadzone) els.zoomDeadzoneVal.textContent = String(el.value);
     if (el === els.activationHold) els.activationHoldVal.textContent = `${el.value}ms`;
     if (el === els.videoModeHand) {
@@ -283,13 +287,11 @@ function sendSettings() {
     sendSettings();
   });
   el.addEventListener("input", () => {
-    if (el === els.scrollSensitivity)
-      els.scrollSensitivityVal.textContent = `×${(Number(el.value) / 1500).toFixed(2)}`;
+    if (el === els.scrollSensitivity) els.scrollSensitivityVal.textContent = `×${Number(el.value).toFixed(2)}`;
     if (el === els.scrollDeadzone) els.scrollDeadzoneVal.textContent = String(el.value);
     if (el === els.scrollClamp) els.scrollClampVal.textContent = String(el.value);
     if (el === els.previewFps) els.previewFpsVal.textContent = String(el.value);
-    if (el === els.zoomSensitivity)
-      els.zoomSensitivityVal.textContent = `×${(Number(el.value) / 8).toFixed(2)}`;
+    if (el === els.zoomSensitivity) els.zoomSensitivityVal.textContent = `×${Number(el.value).toFixed(2)}`;
     if (el === els.zoomDeadzone) els.zoomDeadzoneVal.textContent = String(el.value);
     if (el === els.activationHold) els.activationHoldVal.textContent = `${el.value}ms`;
   });
