@@ -1,40 +1,44 @@
 # 手势遥控（Chrome / Edge 扩展，MV3）
 
-本目录是一个 Manifest V3 扩展，使用本地 MediaPipe HandLandmarker 模型（离线）通过手势控制网页：
+本扩展使用本地 MediaPipe HandLandmarker 模型（离线）通过摄像头手势控制网页：滚动 / 缩放 / 视频。
 
-- 滚动：捏合按住（离合）+ 上下移动
-- 缩放：另一只手捏合按住（离合）+ 上下移动
-- 视频：握拳切换播放/暂停
-- 视频样式（bilibili）：另一只手握拳切换全屏/退出全屏
+## 快速开始
 
-## 使用说明（默认配置）
+1. 打开扩展管理页：`chrome://extensions` 或 `edge://extensions`
+2. 开启「开发者模式」→「加载已解压的扩展程序」→ 选择本目录 `gesture-remoter-extension/`
+3. 点击扩展图标打开弹窗：
+   - 先点「授权摄像头」（会打开授权窗口；允许后自动关闭）
+   - 再点「启动」
 
-- 左手：捏合按住后上下移动 → 滚动
-- 右手：捏合按住后上下移动 → 缩放
-- 左手握拳：视频播放/暂停
-- 右手握拳：bilibili 全屏/退出全屏
-- 若提示 `Permission dismissed`，先点“授权摄像头”，允许后再按“启动”
+## 默认手势（可在弹窗调整左右手）
+
+- 滚动：指定手「捏合按住」+ 上下移动
+- 缩放：另一只手「捏合按住」+ 上下移动（控制页面缩放）
+- 视频播放/暂停：指定手「握拳」触发一次（等价于点击视频播放层）
+- 全屏切换：另一只手「握拳」触发（当前实现为发送 `F` 键；常见视频站点可用）
 
 ## 重要提示
 
-- **站点访问权限**：建议把扩展“站点访问权限”设为“所有网站”，否则部分页面无法注入脚本。
-- **受限页面**：扩展无法在 `chrome://*`、`edge://*`、Chrome Web Store 等页面运行。
-- **iframe**：为避免控制子页面滚动，本扩展只在顶层页面生效（不在 iframe 内运行）。
-- **本地文件 / PDF**：本地 `file://` / PDF 需要在扩展详情中开启“允许访问文件网址”。PDF 滚动/真全屏会使用调试协议，Chrome 可能显示“正在调试此标签页”提示。
+- 受限页面：扩展无法在 `chrome://*` / `edge://*` / Chrome Web Store 等页面注入内容脚本
+- iframe：仅在顶层页面运行，避免误控子页面滚动
+- 本地 `file://` / PDF：
+  - 需要在扩展详情页开启「允许访问文件网址」
+  - PDF 滚动/按键模拟会使用 `chrome.debugger`，浏览器可能显示「正在调试此标签页」
+- 若看到 `NotAllowedError` 且没有弹出授权窗口：
+  - 检查系统摄像头隐私权限（Windows 设置 → 隐私和安全 → 摄像头）
+  - 检查浏览器摄像头设置（`chrome://settings/content/camera` / `edge://settings/content/camera`）
 
 ## 模型与资源
 
-- 模型与 WASM 都来自本地 `gesture-extension/libs/`，不依赖 CDN。
+- 所有 WASM 与模型位于本地 `gesture-remoter-extension/libs/`，不依赖 CDN
+- 使用的模型文件：`gesture-remoter-extension/libs/hand_landmarker.task`
 
 ## 权限与隐私
 
-- 摄像头画面仅用于本地手势识别，不上传、不出网、不持久化保存。
-- `debugger` 权限用于 PDF 滚动与模拟按键（例如 bilibili 全屏的 `F`），Chrome 可能显示“正在调试此标签页”提示。
+- 摄像头画面仅用于本地手势识别，不上传、不出网
+- `debugger` 权限仅用于 PDF 滚动与按键注入（例如全屏 `F`）
 
 ## 许可证
 
-<<<<<<< HEAD
-本项目使用 MIT License，详见 `gesture-extension/LICENSE`（仓库根目录也有一份 `LICENSE`）。
-=======
-本项目使用 MIT License
->>>>>>> 08529f710927d7719b6336c232e5785dc6e75880
+MIT License（见 `gesture-remoter-extension/LICENSE`，仓库根目录也有 `LICENSE`）。
+

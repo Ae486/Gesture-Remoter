@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>授权摄像头 - 手势遥控</title>
+    <link rel="stylesheet" href="grant_camera.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="brand">
+        <img class="logo" src="icons/icon32.png" alt="" />
+        <div>
+          <div class="title">手势遥控</div>
+          <div class="subtitle">摄像头授权</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="note" id="note">
+        点击下方“授权摄像头”后，浏览器会弹出摄像头权限提示，请选择“允许”。如果没有弹窗且提示
+        <code>NotAllowedError</code>，请检查：
+        <div class="note-list">
+          <div>1）系统的摄像头隐私权限（Windows 设置 → 隐私和安全 → 摄像头）。</div>
+          <div>2）浏览器的摄像头权限（<code>chrome://settings/content/camera</code> / <code>edge://settings/content/camera</code>）。</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="btnGrant" class="primary">授权摄像头</button>
+        <button id="btnClose">关闭</button>
+      </div>
+
+      <div id="status" class="status">等待授权…</div>
+
+      <div class="preview">
+        <video id="video" autoplay playsinline muted></video>
+      </div>
+    </main>
+
+    <script type="module" src="grant_camera.js"></script>
+  </body>
+</html>
+

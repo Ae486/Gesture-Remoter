@@ -2,9 +2,6 @@ const els = {
   start: document.getElementById("start"),
   stop: document.getElementById("stop"),
   grantCamera: document.getElementById("grantCamera"),
-  camBox: document.getElementById("camBox"),
-  camPreview: document.getElementById("camPreview"),
-  camStop: document.getElementById("camStop"),
   enableScroll: document.getElementById("enableScroll"),
   enableZoom: document.getElementById("enableZoom"),
   enableVideo: document.getElementById("enableVideo"),
@@ -38,8 +35,6 @@ const els = {
   previewMirror: document.getElementById("previewMirror"),
   useGpuDelegate: document.getElementById("useGpuDelegate"),
 };
-
-let permissionStream = null;
 
 function setText(el, text) {
   el.textContent = text ?? "—";
@@ -158,7 +153,6 @@ async function refresh() {
 }
 
 els.start.addEventListener("click", async () => {
-  stopPermissionPreview();
   await send("START");
   await refresh();
 });
@@ -169,40 +163,8 @@ els.stop.addEventListener("click", async () => {
 });
 
 els.grantCamera.addEventListener("click", async () => {
-  try {
-    if (permissionStream) return;
-    permissionStream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } },
-      audio: false,
-    });
-    els.camBox.hidden = false;
-    els.camPreview.srcObject = permissionStream;
-    await els.camPreview.play().catch(() => {});
-    await send("CAMERA_GRANTED");
-    // Release the camera so offscreen inference can open it reliably.
-    stopPermissionPreview();
-    await refresh();
-  } catch (e) {
-    await send("CAMERA_ERROR", { message: `${e?.name || "Error"}: ${e?.message || String(e)}` });
-    await refresh();
-  }
-});
-
-function stopPermissionPreview() {
-  if (!permissionStream) return;
-  for (const t of permissionStream.getTracks()) t.stop();
-  permissionStream = null;
-  els.camPreview.pause();
-  els.camPreview.srcObject = null;
-  els.camBox.hidden = true;
-}
-
-els.camStop.addEventListener("click", () => {
-  stopPermissionPreview();
-});
-
-window.addEventListener("unload", () => {
-  stopPermissionPreview();
+  await send("OPEN_CAMERA_GRANT");
+  await refresh();
 });
 
 function onToggleChange() {

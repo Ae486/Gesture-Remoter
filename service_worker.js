@@ -23,6 +23,10 @@ let zoomTask = {
 
 let currentPreviewTabId = null;
 let debuggerAttachedTabId = null;
+let cameraGrantWindowId = null;
+let cameraGrantTabId = null;
+let lastStartRequestedAt = 0;
+let didAutoOpenGrantForStartAt = 0;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -82,6 +86,32 @@ async function closeOffscreenIfPresent() {
   const hasOffscreen = contexts.some((c) => c.contextType === "OFFSCREEN_DOCUMENT");
   if (!hasOffscreen) return;
   await chrome.offscreen.closeDocument();
+}
+
+async function closeCameraGrantWindow() {
+  if (cameraGrantWindowId == null) return;
+  const winId = cameraGrantWindowId;
+  cameraGrantWindowId = null;
+  cameraGrantTabId = null;
+  await chrome.windows.remove(winId).catch(() => {});
+}
+
+async function openCameraGrantWindow() {
+  if (cameraGrantWindowId != null) {
+    await chrome.windows.update(cameraGrantWindowId, { focused: true }).catch(() => {});
+    if (cameraGrantTabId != null) {
+      await chrome.tabs.update(cameraGrantTabId, { active: true }).catch(() => {});
+    }
+    return;
+  }
+
+  const url = chrome.runtime.getURL("grant_camera.html");
+  const win = await chrome.windows
+    .create({ url, type: "popup", width: 420, height: 560, focused: true })
+    .catch(() => null);
+
+  cameraGrantWindowId = win?.id ?? null;
+  cameraGrantTabId = win?.tabs?.[0]?.id ?? null;
 }
 
 async function hidePreviewIfPresent(tabId) {
@@ -283,6 +313,7 @@ function scheduleZoom(multiplier) {
 async function start() {
   state.lastError = null;
   state.needsCameraPermission = false;
+  lastStartRequestedAt = Date.now();
   await loadFeatures();
   await loadSettings();
   const tabId = await getActiveTabId();
@@ -303,6 +334,7 @@ async function stop() {
   try {
     await sendToOffscreenWithRetry("STOP", null, { retries: 2, delayMs: 50 }).catch(() => {});
     await hidePreviewEverywhere().catch(() => {});
+    await closeCameraGrantWindow().catch(() => {});
     if (debuggerAttachedTabId != null) {
       await chrome.debugger.detach({ tabId: debuggerAttachedTabId }).catch(() => {});
       debuggerAttachedTabId = null;
@@ -335,6 +367,17 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   if (currentPreviewTabId === tabId) currentPreviewTabId = null;
   if (debuggerAttachedTabId === tabId) {
     debuggerAttachedTabId = null;
+  }
+  if (cameraGrantTabId === tabId) {
+    cameraGrantTabId = null;
+    cameraGrantWindowId = null;
+  }
+});
+
+chrome.windows.onRemoved.addListener((windowId) => {
+  if (cameraGrantWindowId === windowId) {
+    cameraGrantWindowId = null;
+    cameraGrantTabId = null;
   }
 });
 
@@ -421,6 +464,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         await stop();
         return sendResponse(state);
       }
+      if (msg.type === "OPEN_CAMERA_GRANT") {
+        await openCameraGrantWindow();
+        return sendResponse(true);
+      }
       if (msg.type === "CAMERA_GRANTED") {
         state.lastError = null;
         state.needsCameraPermission = false;
@@ -477,9 +524,28 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         }
       }
 
+      if (msg?.source === "grant") {
+        if (msg.type === "CAMERA_GRANTED") {
+          state.lastError = null;
+          state.needsCameraPermission = false;
+          broadcastState();
+          if (!state.running) {
+            await start();
+          }
+          return sendResponse(true);
+        }
+        if (msg.type === "CAMERA_ERROR") {
+          state.lastError = msg.payload?.message ?? "Camera error";
+          state.needsCameraPermission = true;
+          broadcastState();
+          return sendResponse(true);
+        }
+        return sendResponse(true);
+      }
+
       if (msg?.source === "offscreen") {
         if (msg.type === "STATUS") {
-          state.cameraState = msg.payload?.cameraState ?? state.cameraState;
+          state.cameraState = msg.payload?.cameraState ?? state.cameraState;    
           state.handDetected = !!msg.payload?.handDetected;
           state.lastFrameAt = Date.now();
           state.lastDebug = msg.payload?.debug ?? null;
@@ -493,6 +559,15 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           state.handDetected = false;
           if (isCameraPermissionError(state.lastError)) {
             state.needsCameraPermission = true;
+            const now = Date.now();
+            if (
+              now - lastStartRequestedAt < 2500 &&
+              now - didAutoOpenGrantForStartAt > 2500 &&
+              cameraGrantWindowId == null
+            ) {
+              didAutoOpenGrantForStartAt = now;
+              openCameraGrantWindow().catch(() => {});
+            }
           }
           await hidePreviewEverywhere();
 
